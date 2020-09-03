@@ -1,6 +1,7 @@
 package com.at.avro.config;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -16,13 +17,17 @@ import schemacrawler.schema.Table;
  */
 public class AvroConfig {
 
+    private static final String TIMESTAMP_MILLIS = "timestamp-millis";
+    private static final String TIMESTAMP_MICROS = "timestamp-micros";
+
     private boolean representEnumsAsStrings = false;
     private boolean nullableTrueByDefault = false;
     private boolean allFieldsDefaultNull = false;
     private boolean useSqlCommentsAsDoc = false;
+    private boolean timestampsInMicroseconds = false;
 
     private Class<?> decimalTypeClass = BigDecimal.class;
-    private Class<?> dateTypeClass = Date.class;
+    private Class<?> dateTypeClass = LocalDateTime.class;
 
     private final String namespace;
 
@@ -126,7 +131,7 @@ public class AvroConfig {
     public Class<?> getDecimalTypeClass() {
         return decimalTypeClass;
     }
-    
+
     /**
      * Provide mapper for unknown db types. Throws IllegalArgumentException by default.
      * For example, if you want to default all unknown types to string:
@@ -139,11 +144,11 @@ public class AvroConfig {
         this.unknownTypeResolver = unknownTypeResolver;
         return this;
     }
-    
+
     public Function<String, String> getUnknownTypeResolver() {
         return unknownTypeResolver;
     }
-    
+
     /**
      * Set a callback that will be called after avro model was built.
      * Schema model is ready by this point, but you can still modify it by adding custom properties.
@@ -152,11 +157,11 @@ public class AvroConfig {
         this.avroSchemaPostProcessor = avroSchemaPostProcessor;
         return this;
     }
-    
+
     public BiConsumer<AvroSchema, Table> getAvroSchemaPostProcessor() {
         return avroSchemaPostProcessor;
     }
-    
+
     /**
      * Set to true to use SQL comments at table and field level as optional avro doc fields.
      */
@@ -164,9 +169,25 @@ public class AvroConfig {
         this.useSqlCommentsAsDoc = useSqlCommentsAsDoc;
         return this;
     }
-    
+
     public boolean isUseSqlCommentsAsDoc() {
         return useSqlCommentsAsDoc;
     }
-    
+
+    /**
+     * Set the default timestamp logical type to timestamp-micros (default is timestamp-millis)
+     */
+    public AvroConfig setTimestampsInMicroseconds(boolean timestampsInMicroseconds) {
+        this.timestampsInMicroseconds = timestampsInMicroseconds;
+        return this;
+    }
+
+    public boolean isTimestampsInMicroseconds() {
+        return timestampsInMicroseconds;
+    }
+
+    public String getDefaultTimestampLogicalType() {
+        return timestampsInMicroseconds ? TIMESTAMP_MICROS : TIMESTAMP_MILLIS;
+    }
+
 }

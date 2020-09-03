@@ -1,19 +1,16 @@
 package com.at.avro.types;
 
 import com.at.avro.config.AvroConfig;
-
 import schemacrawler.schema.Column;
 
-/**
- * @author artur@callfire.com
- */
-public class Date extends Type {
+public class Timestamp extends Type {
 
-    private final String logicalType = "date";
+    private final String logicalType;
     private final String javaClass;
 
-    public Date(Column column, AvroConfig config) {
-        super("int");
+    public Timestamp(Column column, AvroConfig config) {
+        super("long");
+        this.logicalType = config.getDefaultTimestampLogicalType();
         this.javaClass = config.getDateTypeClass().getCanonicalName();
     }
 

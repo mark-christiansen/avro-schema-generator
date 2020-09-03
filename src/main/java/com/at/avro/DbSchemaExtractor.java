@@ -6,9 +6,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.at.avro.config.AvroConfig;
 
+import schemacrawler.inclusionrule.ExcludeAll;
+import schemacrawler.inclusionrule.IncludeAll;
+import schemacrawler.inclusionrule.RegularExpressionInclusionRule;
 import schemacrawler.schema.Catalog;
 import schemacrawler.schema.Schema;
 import schemacrawler.schema.Table;
@@ -63,10 +67,47 @@ public class DbSchemaExtractor {
     private List<AvroSchema> get(AvroConfig avroConfig, String dbSchemaName, String... tableNames) {
         try (Connection connection = DriverManager.getConnection(connectionUrl, connectionProperties)) {
 
-            SchemaCrawlerOptionsBuilder crawlerOptionsBuilder = defaultCrawlerOptionsBuilder();
-            if (dbSchemaName != null) {
-                crawlerOptionsBuilder.includeSchemas(new RegularExpressionInclusionRule(".*((?i)" + dbSchemaName + ")"));
+            LimitOptionsBuilder limitOptionsBuilder = defaultLimitOptionsBuilder();
+            LoadOptionsBuilder loadOptionsBuilder = defaultLoadOptionsBuilder();
+
+            // pull database name out of connection string if specified (MS SQL Server)
+            final String databaseName;
+            if (connectionUrl.contains("databaseName=")) {
+                String str = connectionUrl.substring(connectionUrl.indexOf("databaseName=") + 13);
+                databaseName = str.contains("&") ? str.substring(0, str.indexOf("&")) : str;
+            } else {
+                databaseName = null;
             }
+
+            // filter load by schema name
+            if (databaseName != null && dbSchemaName != null) {
+                limitOptionsBuilder.includeSchemas(new RegularExpressionInclusionRule(databaseName + "\\.((?i)" + dbSchemaName + ")"));
+            } else if (dbSchemaName != null) {
+                limitOptionsBuilder.includeSchemas(new RegularExpressionInclusionRule(".*((?i)" + dbSchemaName + ")"));
+            }
+
+            // filter load by table names
+            if (tableNames != null && tableNames.length > 0) {
+
+                StringBuilder tablePrefix = new StringBuilder();
+                if (databaseName != null) {
+                    tablePrefix.append(databaseName);
+                    tablePrefix.append(".");
+                }
+                if (dbSchemaName != null) {
+                    tablePrefix.append(dbSchemaName);
+                    tablePrefix.append(".");
+                }
+
+                Set<String> fullTableNames = Arrays.stream(tableNames)
+                    .map(tableName -> tablePrefix.toString() + tableName)
+                    .collect(Collectors.toSet());
+                limitOptionsBuilder.includeTables(fullTableNames::contains);
+            }
+
+            SchemaCrawlerOptionsBuilder crawlerOptionsBuilder = SchemaCrawlerOptionsBuilder.builder()
+                .withLimitOptionsBuilder(limitOptionsBuilder)
+                .withLoadOptionsBuilder(loadOptionsBuilder);
 
             Catalog catalog = SchemaCrawlerUtility.getCatalog(connection, crawlerOptionsBuilder.toOptions());
 
@@ -81,9 +122,7 @@ public class DbSchemaExtractor {
 
             for (Schema dbSchema : dbSchemas) {
                 for (Table table : catalog.getTables(dbSchema)) {
-                    if (tableNames.length == 0 || containsIgnoreCase(tableNames, table.getName())) {
-                        schemas.add(new AvroSchema(table, avroConfig));
-                    }
+                    schemas.add(new AvroSchema(table, avroConfig));
                 }
             }
 
@@ -97,12 +136,18 @@ public class DbSchemaExtractor {
         }
     }
 
-    private SchemaCrawlerOptionsBuilder defaultCrawlerOptionsBuilder() {
-        return SchemaCrawlerOptionsBuilder.builder()
-                .tableNamePattern("%")
-                .includeRoutines(new ExcludeAll())
-                .withSchemaInfoLevel(SchemaInfoLevelBuilder.maximum())
-                .includeColumns(new IncludeAll());
+    private LimitOptionsBuilder defaultLimitOptionsBuilder() {
+        return LimitOptionsBuilder.builder()
+            .tableNamePattern("%")
+            .includeRoutines(new ExcludeAll())
+            .includeColumns(new IncludeAll());
+    }
+
+    private LoadOptionsBuilder defaultLoadOptionsBuilder() {
+        return LoadOptionsBuilder.builder()
+            // Set what details are required in the schema - this affects the
+            // time taken to crawl the schema
+            .withSchemaInfoLevel(SchemaInfoLevelBuilder.standard());
     }
 
     private boolean containsIgnoreCase(String[] array, String word) {

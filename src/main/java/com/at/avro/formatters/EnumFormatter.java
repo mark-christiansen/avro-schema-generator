@@ -7,6 +7,7 @@ import com.at.avro.types.Enum;
  * @author artur@callfire.com
  */
 public class EnumFormatter implements Formatter<Enum> {
+
     @Override
     public String toJson(Enum anEnum, FormatterConfig config) {
         String template = "{ \"type\":\"enum\", \"name\":\"%s\", \"symbols\":[%s] }".replaceAll(":", config.colon());

@@ -12,12 +12,16 @@ public class DecimalFormatter implements Formatter<Decimal> {
 
     @Override
     public String toJson(Decimal decimal, FormatterConfig config) {
-        String template = "{ \"type\":\"%s\", \"java-class\":\"%s\", \"logicalType\":\"%s\", \"precision\":%s, \"scale\":%s }"
+
+        // remove java-class field because its not part of Avro spec
+        //String template = "{ \"type\":\"%s\", \"java-class\":\"%s\", \"logicalType\":\"%s\", \"precision\":%s, \"scale\":%s }"
+        //    .replaceAll(":", config.colon());
+
+        String template = "{ \"type\":\"%s\", \"logicalType\":\"%s\", \"precision\":%s, \"scale\":%s }"
             .replaceAll(":", config.colon());
 
         return format(template,
                 decimal.getPrimitiveType(),
-                decimal.getJavaClass(),
                 decimal.getLogicalType(),
                 decimal.getPrecision(),
                 decimal.getScale());

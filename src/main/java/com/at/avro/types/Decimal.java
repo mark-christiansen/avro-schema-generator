@@ -15,7 +15,7 @@ public class Decimal extends Type {
     private final String logicalType = "decimal";
 
     public Decimal(Column column, AvroConfig config) {
-        super("string");
+        super("bytes");
         this.precision = column.getSize();
         this.scale = column.getDecimalDigits();
         this.javaClass = config.getDecimalTypeClass().getCanonicalName();

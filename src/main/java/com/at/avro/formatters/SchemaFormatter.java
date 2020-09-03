@@ -4,6 +4,8 @@ import com.at.avro.config.FormatterConfig;
 import com.at.avro.AvroField;
 import com.at.avro.AvroSchema;
 
+import java.util.List;
+
 /**
  * Writes avro schema json based on AvroSchema bean.
  *
@@ -13,14 +15,13 @@ public class SchemaFormatter implements Formatter<AvroSchema> {
 
     @Override
     public String toJson(AvroSchema avroSchema, FormatterConfig config) {
-        StringBuilder builder = new StringBuilder();
 
-        builder
-                .append("{").append(config.prettyPrintSchema()? "" : " ").append(config.lineSeparator())
+        StringBuilder builder = new StringBuilder();
+        builder.append("{").append(config.prettyPrintSchema()? "" : " ").append(config.lineSeparator())
                 .append(formatLine(config, "type", "record"))
-                .append(formatLine(config, "name", avroSchema.getName()))
+                .append(formatLine(config, "name",  getRecordName(avroSchema)))
                 .append(formatLine(config, "namespace", avroSchema.getNamespace()));
-        
+
         if (avroSchema.isDocSet()) {
             builder.append(formatLine(config, "doc", avroSchema.getDoc()));
         }
@@ -31,7 +32,7 @@ public class SchemaFormatter implements Formatter<AvroSchema> {
 
         builder.append(config.lineSeparator())
                .append(config.indent()).append("\"fields\"").append(config.colon()).append("[").append(config.lineSeparator())
-               .append(formatFields(config, avroSchema)).append(config.lineSeparator())
+               .append(formatFields(config, getFields(avroSchema))).append(config.lineSeparator())
                .append(config.indent()).append("]").append(config.lineSeparator())
                .append("}");
 
@@ -42,14 +43,24 @@ public class SchemaFormatter implements Formatter<AvroSchema> {
         return config.indent() + "\"" + name + "\"" + config.colon() + "\"" + value + "\"," + (config.prettyPrintSchema()? "" : " ") + config.lineSeparator();
     }
 
-    public String formatFields(FormatterConfig config, AvroSchema schema) {
+    public String formatFields(FormatterConfig config, List<AvroField> fields) {
         StringBuilder fieldsJson = new StringBuilder();
-        for (AvroField field : schema.getFields()) {
+        for (AvroField field : fields) {
             Formatter<AvroField> formatter = config.getFormatter(field);
             String json = formatter.toJson(field, config);
             fieldsJson.append(config.indent()).append(config.indent()).append(json).append(",").append(config.lineSeparator());
         }
-        fieldsJson.setLength(fieldsJson.length()-2);
+        if (fieldsJson.length() > 1) {
+            fieldsJson.setLength(fieldsJson.length() - 2);
+        }
         return fieldsJson.toString();
+    }
+
+    protected String getRecordName(AvroSchema avroSchema) {
+        return avroSchema.getName();
+    }
+
+    protected List<AvroField> getFields(AvroSchema avroSchema) {
+        return avroSchema.getFields();
     }
 }

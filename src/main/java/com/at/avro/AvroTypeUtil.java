@@ -17,6 +17,7 @@ final class AvroTypeUtil {
      * Mapping logic can be tweaked a bit using AvroConfig.
      */
     static AvroType getAvroType(Column column, AvroConfig config) {
+
         boolean nullable = column.isNullable() || config.isNullableTrueByDefault();
         String type = column.getType().getName().toLowerCase();
         Class typeClz = column.getType().getTypeMappedClass();
@@ -27,17 +28,36 @@ final class AvroTypeUtil {
             } else {
                 return new AvroType(new Enum(column), nullable);
             }
-        }
-        else if (column.getType().isUserDefined()) {
+        } else if (column.getType().isUserDefined()) {
             return new AvroType(new Primitive("string"), nullable);
-        }
-        else if (asList("decimal", "numeric").contains(type)) {
+        } else if (asList("decimal", "numeric").contains(type)) {
             return new AvroType(new Decimal(column, config), nullable);
-        }
-        else if (asList("timestamp", "datetime", "date", "time").contains(type)) {
+        } else if (type.equalsIgnoreCase("date")) {
             return new AvroType(new Date(column, config), nullable);
+        } else if (asList("timestamp", "datetime", "time").contains(type)) {
+            return new AvroType(new Timestamp(column, config), nullable);
         } else if (typeClz == java.sql.Array.class) {
             return new AvroType(new Array(new Primitive(getPrimitiveType(type.substring(1), config))), nullable);
+        // handle Oracle number
+        } else if (type.equalsIgnoreCase("number")) {
+
+            int size = column.getSize();
+            int decimalPlaces = column.getDecimalDigits();
+            if (decimalPlaces > 0) {
+                if (size <= 9) {
+                    return new AvroType(new Primitive("float"), nullable);
+                } else if (size <= 18) {
+                    return new AvroType(new Primitive("double"), nullable);
+                }
+                return new AvroType(new Primitive("bytes"), nullable);
+            } else {
+                if (size <= 9) {
+                    return new AvroType(new Primitive("int"), nullable);
+                } else if (size <= 18) {
+                    return new AvroType(new Primitive("long"), nullable);
+                }
+                return new AvroType(new Primitive("bytes"), nullable);
+            }
         }
 
         return new AvroType(new Primitive(getPrimitiveType(type, config)), nullable);
@@ -48,6 +68,7 @@ final class AvroTypeUtil {
 
             case "integer":
             case "int":
+            case "int identity":
             case "int unsigned":
             case "int2":
             case "int4":
@@ -78,11 +99,14 @@ final class AvroTypeUtil {
             case "char":
             case "bpchar":
             case "varchar":
+            case "varchar2":
             case "text":
             case "longtext":
             case "longvarchar":
             case "longnvarchar":
             case "nvarchar":
+            case "nvarchar2":
+            case "nclob":
             case "macaddr":
             case "inet":
             case "cidr":

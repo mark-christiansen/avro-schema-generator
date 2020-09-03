@@ -1,0 +1,39 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+group = 'avro-schema-generator'
+version = '0.0.1'
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+    maven {
+        url "http://packages.confluent.io/maven/"
+    }
+}
+
+dependencies {
+
+    compile "joda-time:joda-time:${joda_version}"
+    //compile "org.apache.avro:avro:${avro_version}"
+    compile "ch.qos.logback:logback-classic:${logback_version}"
+    compile "us.fatehi:schemacrawler:${schemacrawler_version}"
+    compile "commons-io:commons-io:${commons_io_version}"
+    compile "org.apache.commons:commons-lang3:${commons_lang_version}"
+    compile "org.modeshape:modeshape-common:${modeshape_version}"
+    runtime "com.oracle.database.jdbc:ojdbc8:${oracle_version}"
+    runtime "com.microsoft.sqlserver:mssql-jdbc:${sql_server_version}"
+
+    // test dependencies
+    testCompile "org.mockito:mockito-junit-jupiter:${mockito_version}"
+    testCompile "org.flywaydb:flyway-core:${flyway_version}"
+    testCompile "org.hsqldb:hsqldb:${hsqldb_version}"
+    testCompile "org.testcontainers:testcontainers:${testcontainers_version}"
+    testCompile "org.testcontainers:postgresql:${testcontainers_version}"
+}

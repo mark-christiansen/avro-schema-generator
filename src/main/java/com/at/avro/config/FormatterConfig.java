@@ -30,6 +30,7 @@ public class FormatterConfig {
             put(AvroField.class, new FieldFormatter());
             put(AvroType.class, new TypeFormatter());
             put(Date.class, new DateFormatter());
+            put(Timestamp.class, new TimestampFormatter());
             put(Enum.class, new EnumFormatter());
             put(Primitive.class, new PrimitiveFormatter());
             put(Decimal.class, new DecimalFormatter());
