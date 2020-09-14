@@ -17,6 +17,8 @@ import schemacrawler.schema.Table;
  */
 public class AvroConfig {
 
+    private static final String TIME_MILLIS = "time-millis";
+    private static final String TIME_MICROS = "time-micros";
     private static final String TIMESTAMP_MILLIS = "timestamp-millis";
     private static final String TIMESTAMP_MICROS = "timestamp-micros";
 
@@ -24,6 +26,7 @@ public class AvroConfig {
     private boolean nullableTrueByDefault = false;
     private boolean allFieldsDefaultNull = false;
     private boolean useSqlCommentsAsDoc = false;
+    private boolean timesInMicroseconds = false;
     private boolean timestampsInMicroseconds = false;
 
     private Class<?> decimalTypeClass = BigDecimal.class;
@@ -175,6 +178,22 @@ public class AvroConfig {
     }
 
     /**
+     * Set the default time logical type to time-micros (default is time-millis)
+     */
+    public AvroConfig setTimesInMicroseconds(boolean timesInMicroseconds) {
+        this.timesInMicroseconds = timesInMicroseconds;
+        return this;
+    }
+
+    public boolean isTimesInMicroseconds() {
+        return timesInMicroseconds;
+    }
+
+    public String getDefaultTimeLogicalType() {
+        return timesInMicroseconds ? TIME_MICROS : TIME_MILLIS;
+    }
+
+    /**
      * Set the default timestamp logical type to timestamp-micros (default is timestamp-millis)
      */
     public AvroConfig setTimestampsInMicroseconds(boolean timestampsInMicroseconds) {
@@ -189,5 +208,4 @@ public class AvroConfig {
     public String getDefaultTimestampLogicalType() {
         return timestampsInMicroseconds ? TIMESTAMP_MICROS : TIMESTAMP_MILLIS;
     }
-
 }

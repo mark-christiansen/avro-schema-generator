@@ -34,8 +34,10 @@ final class AvroTypeUtil {
             return new AvroType(new Decimal(column, config), nullable);
         } else if (type.equalsIgnoreCase("date")) {
             return new AvroType(new Date(column, config), nullable);
-        } else if (asList("timestamp", "datetime", "time").contains(type)) {
+        } else if (asList("timestamp", "datetime").contains(type)) {
             return new AvroType(new Timestamp(column, config), nullable);
+        } else if ("time".equals(type)) {
+            return new AvroType(new Time(column, config), nullable);
         } else if (typeClz == java.sql.Array.class) {
             return new AvroType(new Array(new Primitive(getPrimitiveType(type.substring(1), config))), nullable);
         // handle Oracle number

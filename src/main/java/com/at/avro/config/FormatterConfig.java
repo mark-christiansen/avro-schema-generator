@@ -24,12 +24,14 @@ public class FormatterConfig {
     private String colon;
     private boolean prettyPrintFields;
     private boolean prettyPrintSchema;
+    private boolean lowerCaseNames;
 
     private Map<Class, Formatter> formatters = new HashMap<Class, Formatter>() {{
             put(AvroSchema.class, new SchemaFormatter());
             put(AvroField.class, new FieldFormatter());
             put(AvroType.class, new TypeFormatter());
             put(Date.class, new DateFormatter());
+            put(Time.class, new TimeFormatter());
             put(Timestamp.class, new TimestampFormatter());
             put(Enum.class, new EnumFormatter());
             put(Primitive.class, new PrimitiveFormatter());
@@ -68,6 +70,10 @@ public class FormatterConfig {
         return prettyPrintSchema;
     }
 
+    public boolean lowerCaseNames() {
+        return lowerCaseNames;
+    }
+
     public <T> Formatter<T> getFormatter(T dto) {
         if (!formatters.containsKey(dto.getClass())) {
             throw new IllegalArgumentException("Formatter not found for " + dto.getClass().getSimpleName());
@@ -85,6 +91,7 @@ public class FormatterConfig {
         private boolean prettyPrintFields = false;
         private boolean addSpaceAfterColon = true;
         private String indent = "  ";
+        private boolean lowerCaseNames = false;
 
         public <T> Builder setFormatter(Class<T> dtoClass, Formatter<T> formatter) {
             formatters.put(dtoClass, formatter);
@@ -112,6 +119,12 @@ public class FormatterConfig {
             return this;
         }
 
+        /** Set indent value for pretty printing. */
+        public Builder setLowerCaseNames(boolean lowerCaseNames) {
+            this.lowerCaseNames = lowerCaseNames;
+            return this;
+        }
+
         public FormatterConfig build() {
             FormatterConfig config = new FormatterConfig();
             config.formatters.putAll(this.formatters);
@@ -120,6 +133,7 @@ public class FormatterConfig {
             config.prettyPrintFields = prettyPrintFields && prettyPrintSchema;
             config.prettyPrintSchema = prettyPrintSchema;
             config.indent = prettyPrintSchema ? indent : "";
+            config.lowerCaseNames = lowerCaseNames;
             return config;
         }
     }
