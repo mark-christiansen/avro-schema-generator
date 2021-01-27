@@ -25,7 +25,7 @@ public class AvroSchema {
 
     private Map<String, String> customProperties = new LinkedHashMap<>();
 
-    public AvroSchema(Table table, AvroConfig avroConfig) {
+    public AvroSchema(Table table, AvroConfig avroConfig, List<AvroField> extraFields) {
         this.name = avroConfig.getSchemaNameMapper().apply(table.getName());
         this.namespace = avroConfig.getNamespace();
         this.doc = avroConfig.isUseSqlCommentsAsDoc() ? table.getRemarks() : null;
@@ -38,6 +38,10 @@ public class AvroSchema {
             if (column.isPartOfPrimaryKey()) {
                 this.keys.add(field);
             }
+        }
+
+        if (extraFields != null) {
+            this.fields.addAll(extraFields);
         }
 
         avroConfig.getAvroSchemaPostProcessor().accept(this, table);
@@ -89,5 +93,13 @@ public class AvroSchema {
             .add("customProperties=" + customProperties);
 
         return joiner.toString();
+    }
+
+    private void addField(Column column, AvroConfig avroConfig) {
+        AvroField field = new AvroField(column, avroConfig);
+        this.fields.add(field);
+        if (column.isPartOfPrimaryKey()) {
+            this.keys.add(field);
+        }
     }
 }

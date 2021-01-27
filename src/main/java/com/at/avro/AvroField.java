@@ -38,6 +38,13 @@ public class AvroField {
         }
     }
 
+    public AvroField(String name, AvroType type, Object defaultValue, String doc) {
+        this.name = name;
+        this.type = type;
+        this.defaultValue = defaultValue;
+        this.doc = doc;
+    }
+
     public String getName() {
         return name;
     }

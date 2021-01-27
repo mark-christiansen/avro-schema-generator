@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -154,7 +155,7 @@ public class HsqlIntegrationTest {
 
     @Test
     public void testGetAvroSchemasForTables() {
-        List<AvroSchema> result = extractor.getForTables(avroConfig, "public", "test_records", "non_existing");
+        List<AvroSchema> result = extractor.getForTables(avroConfig, "public", Collections.emptyList(), "test_records", "non_existing");
         assertThat(result.size(), is(1));
     }
 

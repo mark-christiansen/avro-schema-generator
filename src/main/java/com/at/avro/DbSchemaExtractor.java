@@ -14,6 +14,7 @@ import schemacrawler.inclusionrule.ExcludeAll;
 import schemacrawler.inclusionrule.IncludeAll;
 import schemacrawler.inclusionrule.RegularExpressionInclusionRule;
 import schemacrawler.schema.Catalog;
+import schemacrawler.schema.Column;
 import schemacrawler.schema.Schema;
 import schemacrawler.schema.Table;
 import schemacrawler.schemacrawler.*;
@@ -40,22 +41,22 @@ public class DbSchemaExtractor {
 
     /** Returns all AvroSchemas that are present in a target DB */
     public List<AvroSchema> getAll(AvroConfig avroConfig) {
-        return get(avroConfig, null);
+        return get(avroConfig, null, Collections.emptyList());
     }
 
     /** Returns all AvroSchemas that are present in given DB schema */
-    public List<AvroSchema> getForSchema(AvroConfig avroConfig, String dbSchemaName) {
-        return get(avroConfig, dbSchemaName);
+    public List<AvroSchema> getForSchema(AvroConfig avroConfig, String dbSchemaName, List<AvroField> extraFields) {
+        return get(avroConfig, dbSchemaName, extraFields);
     }
 
     /** Returns AvroSchemas for each of given tables */
-    public List<AvroSchema> getForTables(AvroConfig avroConfig, String dbSchemaName, String... tableNames) {
-        return get(avroConfig, dbSchemaName, tableNames);
+    public List<AvroSchema> getForTables(AvroConfig avroConfig, String dbSchemaName, List<AvroField> extraFields, String... tableNames) {
+        return get(avroConfig, dbSchemaName, extraFields, tableNames);
     }
 
     /** Returns AvroSchema for a specific table */
-    public AvroSchema getForTable(AvroConfig avroConfig, String dbSchemaName, String tableName) {
-        List<AvroSchema> schemas = get(avroConfig, dbSchemaName, tableName);
+    public AvroSchema getForTable(AvroConfig avroConfig, String dbSchemaName, List<AvroField> extraFields, String tableName) {
+        List<AvroSchema> schemas = get(avroConfig, dbSchemaName, extraFields, tableName);
         if (schemas.isEmpty()) {
             return null;
         }
@@ -64,7 +65,7 @@ public class DbSchemaExtractor {
         }
     }
 
-    private List<AvroSchema> get(AvroConfig avroConfig, String dbSchemaName, String... tableNames) {
+    private List<AvroSchema> get(AvroConfig avroConfig, String dbSchemaName, List<AvroField> extraFields, String... tableNames) {
         try (Connection connection = DriverManager.getConnection(connectionUrl, connectionProperties)) {
 
             LimitOptionsBuilder limitOptionsBuilder = defaultLimitOptionsBuilder();
@@ -122,7 +123,7 @@ public class DbSchemaExtractor {
 
             for (Schema dbSchema : dbSchemas) {
                 for (Table table : catalog.getTables(dbSchema)) {
-                    schemas.add(new AvroSchema(table, avroConfig));
+                    schemas.add(new AvroSchema(table, avroConfig, extraFields));
                 }
             }
 

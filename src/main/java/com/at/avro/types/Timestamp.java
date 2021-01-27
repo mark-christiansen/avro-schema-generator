@@ -14,6 +14,12 @@ public class Timestamp extends Type {
         this.javaClass = config.getDateTypeClass().getCanonicalName();
     }
 
+    public Timestamp(String logicalType, String javaClass) {
+        super("long");
+        this.logicalType = logicalType;
+        this.javaClass = javaClass;
+    }
+
     public String getLogicalType() {
         return logicalType;
     }
